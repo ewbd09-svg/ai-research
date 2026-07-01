@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: "PR number to rebase and merge"
+        description: PR number to rebase and merge
         required: false
         type: string
 
@@ -17,17 +17,10 @@ permissions:
 
 jobs:
   rebase-and-merge:
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' &&
-       (contains(github.event.pull_request.labels.*.name, '''auto-rebase''') ||
-        (contains(github.event.pull_request.labels.*.name, '''auto-reviewed''') &&
-         contains(github.event.pull_request.labels.*.name, '''approved'''))))
     runs-on: ubuntu-latest
     steps:
-      - name: Determine PR number
+      - uses: actions/github-script@v7
         id: pr_info
-        uses: actions/github-script@v7
         with:
           script: |
             let prNum;
@@ -37,71 +30,102 @@ jobs:
               prNum = context.payload.pull_request.number;
             }
             core.setOutput("pr_number", prNum);
-            console.log("PR #" + prNum);
+
+      - name: Check eligibility
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNum = parseInt('${{ steps.pr_info.outputs.pr_number }}');
+            if (!prNum) { core.setOutput("skip", "true"); return; }
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner, repo: context.repo.repo, pull_number: prNum
+            });
+            if (pr.data.merged || pr.data.state === "closed") {
+              core.setOutput("skip", "true"); return;
+            }
+            const labels = pr.data.labels.map(l => l.name);
+            const ok = labels.includes("auto-rebase") || (labels.includes("auto-reviewed") && labels.includes("approved"));
+            if (!ok) { core.setOutput("skip", "true"); return; }
+            core.setOutput("skip", "false");
+            core.setOutput("head_ref", pr.data.head.ref);
 
       - uses: actions/checkout@v4
+        if: steps.check.outputs.skip != 'true'
         with:
           fetch-depth: 0
           ref: refs/pull/${{ steps.pr_info.outputs.pr_number }}/head
 
-      - name: Configure git
+      - name: Git setup
+        if: steps.check.outputs.skip != 'true'
         run: |
           git config user.name "AI Training Bot"
           git config user.email "bot@ai-training.local"
 
-      - name: Fetch and rebase
+      - name: Rebase
         id: rebase
+        if: steps.check.outputs.skip != 'true'
         run: |
           git fetch origin master
           if git rebase origin/master; then
-            echo "rebase_success=true" >> $GITHUB_OUTPUT
+            echo "success=true" >> $GITHUB_OUTPUT
           else
-            echo "rebase_success=false" >> $GITHUB_OUTPUT
-            echo "conflict_files=$(git diff --name-only --diff-filter=U | tr '''\n''' ''' ''')" >> $GITHUB_OUTPUT
+            echo "success=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Auto-resolve trivial conflicts
-        if: steps.rebase.outputs.rebase_success == 'false'
+      - name: Auto-resolve conflicts
+        if: steps.rebase.outputs.success == 'false'
         run: |
-          git diff --name-only --diff-filter=U | while read f; do
+          for f in $(git diff --name-only --diff-filter=U); do
             case "$f" in
-              *.py|*.json|*.md|*.yml|*.yaml|*.txt|*.cfg|*.ini)
+              *.py|*.json|*.md|*.yml|*.yaml|*.txt)
                 git checkout --theirs "$f" 2>/dev/null || git checkout --ours "$f" 2>/dev/null || true
                 git add "$f" 2>/dev/null || true
-                ;;
+                echo "Resolved: $f" ;;
             esac
           done
-          git diff --cached --name-only | while read f; do
-            echo "Resolved: $f"
-          done
-          git commit --no-edit 2>/dev/null || echo "No changes to commit after resolution"
-          echo "rebase_success=true" >> $GITHUB_OUTPUT
+          git commit --no-edit 2>/dev/null || true
 
-      - name: Push rebased branch
-        if: steps.rebase.outputs.rebase_success == 'true'
+      - name: Push
+        if: steps.check.outputs.skip != 'true'
         run: |
-          HEAD_REF="${{ steps.pr_info.outputs.pr_number }}"
-          BRANCH=$(gh pr view $HEAD_REF --repo ${{ github.repository }} --json headRefName --jq '''.headRefName''')
+          BRANCH="${{ steps.check.outputs.head_ref }}"
           git push origin HEAD:$BRANCH --force 2>&1 || echo "Push failed"
 
-      - name: Merge PR
-        if: steps.rebase.outputs.rebase_success == 'true'
+      - name: Remove auto-rebase label
+        if: steps.check.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           PR_NUM="${{ steps.pr_info.outputs.pr_number }}"
-          gh pr merge $PR_NUM --repo ${{ github.repository }} --merge --subject "Auto-merge after rebase" 2>&1 || echo "Merge failed, trying squash"
-          gh pr merge $PR_NUM --repo ${{ github.repository }} --squash --subject "Auto-merge after rebase" 2>&1 || echo "Squash also failed"
+          gh pr edit $PR_NUM --repo ${{ github.repository }} --remove-label auto-rebase 2>/dev/null || true
 
-      - name: Comment on failure
-        if: failure()
+      - name: Merge
+        if: steps.check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUM="${{ steps.pr_info.outputs.pr_number }}"
+          gh pr merge $PR_NUM --repo ${{ github.repository }} --merge --subject "Auto-merge: fix #$PR_NUM" 2>&1 || gh pr merge $PR_NUM --repo ${{ github.repository }} --squash --subject "Auto-merge: fix #$PR_NUM" 2>&1 || echo "Merge not possible"
+
+      - name: Success comment
+        if: success() && steps.check.outputs.skip != 'true'
         uses: actions/github-script@v7
         with:
           script: |
-            const prNum = ${{ steps.pr_info.outputs.pr_number }};
+            const prNum = parseInt('${{ steps.pr_info.outputs.pr_number }}');
             await github.rest.issues.createComment({
-              issue_number: prNum,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: "❌ 自动变基/合并失败，需要人工处理。\n\n> 💡 虚拟代币仅供学习排名使用，不可兑换为现金或加密货币。感谢贡献！🎉"
+              issue_number: prNum, owner: context.repo.owner, repo: context.repo.repo,
+              body: "✅ Auto rebase and merge successful!\n\n> Virtual tokens for learning ranking only, not redeemable for cash or crypto. Thanks for your contribution!"
+            });
+
+      - name: Failure comment
+        if: failure() && steps.check.outputs.skip != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNum = parseInt('${{ steps.pr_info.outputs.pr_number }}');
+            await github.rest.issues.createComment({
+              issue_number: prNum, owner: context.repo.owner, repo: context.repo.repo,
+              body: "❌ Auto rebase failed, manual conflict resolution needed.\n\n> Virtual tokens for learning ranking only, not redeemable for cash or crypto."
             });
