@@ -1,0 +1,13 @@
+# Changelog\n\n## 2026-07-01\n\n### 🚀 新功能\n\n- feat: daily notification summary (reduce email flood)\n- feat: enhanced bot health dashboard with stats\n- feat: contributor credit score system\n- feat: generate SVG visual leaderboard daily\n- feat: auto-generate CHANGELOG.md on push\n- feat: CodeQL security scanning\n- feat: detect duplicate PRs referencing same issue\n- feat: auto-rebase conflicted PRs daily\n- feat: restore and add token disclaimer in JS string\n- feat: restore and add token disclaimer in JS string\n- feat: restore and add token disclaimer in JS string\n- feat: add token disclaimer to bounty payout\n- feat: add token disclaimer to stats dashboard\n- feat: add token disclaimer to time leaderboard\n- feat: add quality multi-dimension scoring & auto auto-reviewed/approved labeling\n- feat: bot self-check workflow\n- feat: weekly report (Sunday)\n- feat: achievement/milestone system\n- feat: task capacity management (200 limit)\n- feat: /claim issue claiming system\n- feat: full auto-merge pipeline (check labels + status + merge)\n- feat: Docker sandbox verification\n- feat: daily stats dashboard + README badges\n- feat: monthly Hall of Fame\n- feat: difficulty distribution 20/30/30/20 + 14 new easy/medium templates\n- feat: auto-archive merged fixes to fixes/ directory\n\n### 🐛 Bug修复\n\n- fix: add token disclaimer to pr-review report & commit\n- fix: add token disclaimer to bounty-payout.yml (console.log in JS)\n- fix: add token disclaimer to update-time-leaderboard.yml (console.log in JS)\n- fix: auto-merge commit message indentation (single-line template)\n- fix: restore pr-review.yml with properly indented quality scoring\n- fix: restore update-time-leaderboard.yml and add token disclaimer properly\n- fix: restore stats-dashboard.yml and add token disclaimer properly\n- fix: restore bounty-payout.yml and add token disclaimer properly\n- fix: [FIX] Hidden API Endpoint Discovery (auto-merged #186)
+
+Auto-merged by AI Training Bot.
+
+> 💡 虚拟代币仅供学习排名使用，不可兑换为现金或加密货币。\n- fix: [ShanaBoo] [BUG] Insecure Direct Object Reference Chains $50 (auto-merged #190)
+
+Auto-merged by AI Training Bot.
+
+> 💡 虚拟代币仅供学习排名使用，不可兑换为现金或加密货币。\n- fix: fix: [BUG] Server-Side Request Forgery (SSRF) in PDF Generat (auto-merged #191)
+
+Auto-merged by AI Training Bot.
+
+> 💡 虚拟代币仅供学习排名使用，不可兑换为现金或加密货币。\n\n### 📖 文档\n\n- docs: contribution guide with /claim instructions\n- docs: credential security guidance\n\n### 👥 贡献者\n\n- @彭于晏\n- @therealsaitama0\n- @Daniel Shanahan\n- @Mira\n- @Daniel Bates\n- @Roc755\n\n---\n> 💡 虚拟代币仅供学习排名使用，不可兑换为现金或加密货币。\n
