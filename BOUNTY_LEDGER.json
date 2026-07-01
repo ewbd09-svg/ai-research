@@ -1,15 +1,18 @@
 {
   "Rachaelisa": {
     "total": 1410,
-    "submissions": []
+    "submissions": [],
+    "task_count": 43
   },
   "yk578": {
     "total": 575,
-    "submissions": []
+    "submissions": [],
+    "task_count": 25
   },
   "hero-infosec": {
     "total": 525,
-    "submissions": []
+    "submissions": [],
+    "task_count": 14
   },
   "danielalanbates": {
     "total": 515,
@@ -45,18 +48,31 @@
         "date": "2026-07-01"
       }
     ],
-    "submissions_snapshot": 515
+    "task_count": 13
   },
   "foxyManTou": {
     "total": 220,
-    "submissions": []
+    "submissions": [],
+    "task_count": 10
   },
   "bambooshadow-studio": {
     "total": 105,
-    "submissions": []
+    "submissions": [],
+    "task_count": 14
   },
   "MRhuang1106": {
     "total": 65,
-    "submissions": []
+    "submissions": [],
+    "task_count": 4
+  },
+  "merlinsantiago982-cmd": {
+    "total": -35,
+    "submissions": [],
+    "task_count": 1
+  },
+  "jhaayushkumar": {
+    "total": -210,
+    "submissions": [],
+    "task_count": 6
   }
 }
