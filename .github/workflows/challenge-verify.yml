@@ -58,7 +58,7 @@ jobs:
 
               // Analyze the fix
               const addedLines = patch.split("
-").filter(l => l.startsWith("+") && !l.startsWith("+++"));
+            ").filter(l => l.startsWith("+") && !l.startsWith("+++"));
               const removedLines = patch.split("
 ").filter(l => l.startsWith("-") && !l.startsWith("---"));
 
