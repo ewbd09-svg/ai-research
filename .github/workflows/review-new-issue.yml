@@ -94,7 +94,9 @@ jobs:
               report += "\n";
             }
 
-            report += `**最终得分**: ${total}/${baseScore}\n`;
+            report += `**最终得分
+
+> 💡 虚拟代币仅供学习排名使用，不可兑换为现金或加密货币。感谢您的贡献！🚀**: ${total}/${baseScore}\n`;
 
             // Post evaluation
             await github.rest.issues.createComment({
